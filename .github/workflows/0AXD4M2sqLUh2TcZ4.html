@@ -1,0 +1,326 @@
+<html><head><base href="https://websim.ai/" />
+<style>
+:root {
+  --background: linear-gradient(135deg, #ff0000, #0000ff, #00ff00);
+  --text: #ffffff;
+  --link: #ffffff;
+  --hover: #f0f0f0;
+  --gray: #dddddd;
+  --light-gray: rgba(240,240,240,0.1);
+  --border: rgba(255,255,255,0.2);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: var(--background);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+.profile {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.avatar {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--border);
+}
+
+.profile-info h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+}
+
+.username {
+  color: var(--gray);
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.stats {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1rem;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.social-links {
+  margin-top: 1rem;
+}
+
+.social-links a {
+  color: var(--text);
+  text-decoration: none;
+  margin-right: 1rem;
+  transition: color 0.2s;
+}
+
+.social-links a:hover {
+  color: var(--hover);
+}
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.project-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(5px);
+}
+
+.project-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.project-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.project-info {
+  padding: 1rem;
+}
+
+.project-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+}
+
+.project-stats {
+  display: flex;
+  gap: 1rem;
+  color: var(--gray);
+  font-size: 0.9rem;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: var(--gray);
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  z-index: 1000;
+}
+
+.modal-content {
+  position: relative;
+  background: var(--background);
+  margin: 5% auto;
+  padding: 20px;
+  width: 80%;
+  max-width: 600px;
+  border-radius: 10px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.close {
+  position: absolute;
+  right: 20px;
+  top: 10px;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.1);
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+</style>
+</head>
+<body>
+<div class="profile">
+  <div id="profile-content">
+    <div class="loading">Loading profile...</div>
+  </div>
+</div>
+
+<div id="followingModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('followingModal')">&times;</span>
+    <h2>Following</h2>
+    <div id="followingList" class="user-list"></div>
+  </div>
+</div>
+
+<div id="followersModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('followersModal')">&times;</span>
+    <h2>Followers</h2>
+    <div id="followersList" class="user-list"></div>
+  </div>
+</div>
+
+<script>
+const fakeNames = [
+  "CyberPirate", "PixelQueen", "DataDragon", "ByteMaster", "WebWizard",
+  "CodeNinja", "TechTitan", "CloudCrusader", "NetNomad", "BinaryBoss", 
+  "HashHero", "GitGenius", "DevDruid", "ScriptSage", "LogicLord"
+];
+
+function generateFakeUsers(count) {
+  const users = [];
+  for(let i = 0; i < count; i++) {
+    const randomName = fakeNames[Math.floor(Math.random() * fakeNames.length)] + Math.floor(Math.random() * 1000);
+    users.push({
+      username: randomName,
+      avatar_url: `https://picsum.photos/seed/${randomName}/200`
+    });
+  }
+  return users;
+}
+
+function showModal(modalId, users) {
+  const modal = document.getElementById(modalId);
+  const listElement = document.getElementById(modalId === 'followingModal' ? 'followingList' : 'followersList');
+  
+  listElement.innerHTML = users.map(user => `
+    <div class="user-item">
+      <img src="${user.avatar_url}" alt="${user.username}" class="user-avatar">
+      <span>@${user.username}</span>
+    </div>
+  `).join('');
+  
+  modal.style.display = "block";
+}
+
+function closeModal(modalId) {
+  document.getElementById(modalId).style.display = "none";
+}
+
+window.onclick = function(event) {
+  if (event.target.classList.contains('modal')) {
+    event.target.style.display = "none";
+  }
+};
+
+async function loadProfile() {
+  try {
+    const user = await window.websim.getCreatedBy();
+    if (!user) return;
+
+    const userResponse = await fetch(`/api/v1/users/${user.username}`);
+    const userData = await userResponse.json();
+
+    const projectsResponse = await fetch(`/api/v1/users/${user.username}/projects`);
+    const projectsData = await projectsResponse.json();
+
+    const filteredProjects = projectsData.projects.data.filter(({project}) => 
+      project.title && project.title.includes("AstiOS")
+    );
+
+    const followingResponse = await fetch(`/api/v1/users/${user.username}/following?count=true`);
+    const followingData = await followingResponse.json();
+    
+    const followersResponse = await fetch(`/api/v1/users/${user.username}/followers?count=true`);
+    const followersData = await followersResponse.json();
+
+    const fakeFollowing = generateFakeUsers(followingData.following.meta.count);
+    const fakeFollowers = generateFakeUsers(20);
+    const fakeFollowersJSON = JSON.stringify(fakeFollowers).replace(/"/g, '&quot;');
+    const fakeFollowingJSON = JSON.stringify(fakeFollowing).replace(/"/g, '&quot;');
+
+    const profileHTML = `
+      <div class="profile-header">
+        <img src="${userData.user.avatar_url || `https://images.websim.ai/avatar/${user.username}`}" alt="${user.username}" class="avatar">
+        <div class="profile-info">
+          <h1>asterix</h1>
+          <div class="username">@${user.username}</div>
+          <p>im asterix</p>
+          <div class="stats">
+            <div class="stat" onclick="showModal('followingModal', ${fakeFollowingJSON})">
+              <strong>${followingData.following.meta.count}</strong> Following
+            </div>
+            <div class="stat" onclick="showModal('followersModal', ${fakeFollowersJSON})">
+              <strong>2.3B</strong> Followers
+            </div>
+          </div>
+          <div class="social-links">
+            <a href="https://cocrea.world/@asterixmilo_Cocrea" target="_blank">Cocrea</a>
+            <a href="https://scratch.mit.edu/users/asterixmilo" target="_blank">Scratch</a>
+            <a href="https://www.roblox.com/users/7609720339/profile" target="_blank">Roblox</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="projects-grid">
+        ${filteredProjects.map(({project, site}) => `
+          <a href="/p/${project.id}" style="text-decoration: none; color: inherit;">
+            <div class="project-card">
+              <img src="https://images.websim.ai/v1/site/${site?.id || ''}/600" alt="${project.title}" class="project-image">
+              <div class="project-info">
+                <h3 class="project-title">${project.title || 'Untitled Project'}</h3>
+                <div class="project-stats">
+                  <span>❤️ 1.7T</span>
+                  <span>👁️ 1.7B</span>
+                </div>
+              </div>
+            </div>
+          </a>
+        `).join('')}
+      </div>
+    `;
+
+    document.getElementById('profile-content').innerHTML = profileHTML;
+  } catch (error) {
+    console.error('Error loading profile:', error);
+    document.getElementById('profile-content').innerHTML = '<div class="loading">Error loading profile</div>';
+  }
+}
+
+loadProfile();
+</script>
+</body></html>
